@@ -1,0 +1,5 @@
+models/random_forest.pkl
+.venv/
+__pycache__/
+*.py[cod]
+``
