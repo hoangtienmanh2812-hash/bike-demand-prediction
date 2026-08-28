@@ -2,6 +2,7 @@ from pathlib import Path
 import pickle
 from datetime import date, datetime
 import os
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -12,6 +13,7 @@ import streamlit as st
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = PROJECT_ROOT / "models/best_model_xgboost.pkl"
 TRAIN_PATH = PROJECT_ROOT / "data/processed/train.csv"
+APP_TIMEZONE = ZoneInfo("Asia/Ho_Chi_Minh")
 
 
 @st.cache_resource
@@ -137,7 +139,7 @@ feature_columns = bundle["feature_columns"]
 input_column, result_column = st.columns([0.8, 1.2], gap="large")
 with input_column:
     st.subheader("Thông tin đầu vào")
-    current_time = datetime.now().replace(second=0, microsecond=0)
+    current_time = datetime.now(APP_TIMEZONE).replace(second=0, microsecond=0)
     selected_date = st.date_input(
         "Ngày bắt đầu dự báo",
         value=current_time.date(),
@@ -148,7 +150,7 @@ with input_column:
     city = st.text_input("Địa điểm lấy thời tiết", value="Hanoi")
     api_key = get_weather_api_key()
     if not api_key:
-        st.error("Chưa cấu hình OPENWEATHER_API_KEY trong .streamlit/secrets.toml.")
+        st.error("Chưa cấu hình OPENWEATHER_API_KEY. Local: .streamlit/secrets.toml · Streamlit Cloud: Manage app → Settings → Secrets.")
 
     weather_data = st.session_state.get("weather_data", {})
     city_query = city.strip()
@@ -165,7 +167,7 @@ with input_column:
 
     if st.button("Lấy thời tiết hiện tại"):
         if not api_key:
-            st.error("Hãy thêm OPENWEATHER_API_KEY vào .streamlit/secrets.toml rồi khởi động lại ứng dụng.")
+            st.error("Hãy thêm OPENWEATHER_API_KEY vào Secrets của Streamlit Cloud hoặc .streamlit/secrets.toml khi chạy local.")
         else:
             try:
                 weather_data = fetch_current_weather(city_query, api_key)
@@ -192,7 +194,7 @@ with input_column:
 with result_column:
     st.subheader("Kết quả dự đoán")
     if predict_clicked:
-        forecast_start = datetime.combine(selected_date, current_time.time())
+        forecast_start = datetime.combine(selected_date, current_time.time(), tzinfo=APP_TIMEZONE)
         hourly_data = build_next_24h_predictions(forecast_start, temperature_c, humidity_percent, weather, workingday, holiday, model, feature_columns)
         prediction = hourly_data.iloc[0]["Số lượng dự báo"]
         st.metric("Nhu cầu tại thời điểm bắt đầu", f"{prediction:,.0f} lượt thuê")
