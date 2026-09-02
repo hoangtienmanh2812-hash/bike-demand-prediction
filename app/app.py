@@ -204,5 +204,10 @@ with result_column:
         chart.update_layout(title=f"Nhu cầu dự báo trong 24 giờ tới - bắt đầu {forecast_start:%d/%m %H:%M}", xaxis_title="Thời gian (giờ)", yaxis_title="Số lượng lượt thuê", hovermode="x unified", height=500, margin=dict(l=10, r=10, t=60, b=10))
         st.plotly_chart(chart, use_container_width=True)
         st.caption("Biểu đồ thể hiện dự báo từ thời điểm hiện tại đến 24 giờ tiếp theo; điểm màu xanh là thời điểm bắt đầu.")
+        
+        st.subheader("📋 Chi tiết kết quả dự đoán")
+        display_data = hourly_data[["Giờ", "Số lượng dự báo"]].copy()
+        display_data.columns = ["Thời gian", "Nhu cầu (lượt)"]
+        st.dataframe(display_data, use_container_width=True, hide_index=True)
     else:
         st.info("Kiểm tra thông tin thời tiết ở bên trái rồi bấm Dự đoán nhu cầu để xem 24 giờ tiếp theo.")
